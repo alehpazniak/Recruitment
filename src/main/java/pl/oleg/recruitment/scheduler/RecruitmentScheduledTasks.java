@@ -20,7 +20,7 @@ public class RecruitmentScheduledTasks {
     private final RecruitmentStageRepository stageRepository;
     private final RecruitmentEventPublisher eventPublisher;
 
-    @Scheduled(cron = "0 0 * * * *") // Co godzinę
+    @Scheduled(cron = "${scheduler.check-overdue-assignments.cron}")
     public void checkOverdueAssignments() {
         log.info("Checking for overdue assignments");
 
@@ -40,7 +40,7 @@ public class RecruitmentScheduledTasks {
         log.info("Found {} overdue assignments", overdueStages.size());
     }
 
-    @Scheduled(cron = "0 0 9 * * *") // Codziennie o 9:00
+    @Scheduled(cron = "${scheduler.send-upcoming-meeting-reminders.cron}")
     public void sendUpcomingMeetingReminders() {
         log.info("Sending reminders for upcoming meetings");
 
