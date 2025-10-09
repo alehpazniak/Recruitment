@@ -29,7 +29,7 @@ public class StageEvaluation {
     private String evaluatorName;
 
     @Column(nullable = false)
-    private Boolean approved; // true = pozytywna, false = negatywna
+    private Boolean approved;
 
     @Column(length = 2000)
     private String feedback;

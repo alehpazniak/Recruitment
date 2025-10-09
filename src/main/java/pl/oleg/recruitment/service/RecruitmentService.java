@@ -28,26 +28,21 @@ public class RecruitmentService {
 
     public RecruitmentProcessResponse createRecruitmentProcess(CreateRecruitmentProcessRequest request) {
         validateStageDefinitions(request.stageDefinitions());
-
         RecruitmentProcess process = new RecruitmentProcess();
         process.setCandidateName(request.candidateName());
         process.setCandidateEmail(request.candidateEmail());
         process.setPositionTitle(request.positionTitle());
         process.setCurrentStatus(StageStatus.PENDING);
         process.setCreatedAt(LocalDateTime.now());
-
         for (StageDefinitionDTO stageDef : request.stageDefinitions()) {
             RecruitmentStage stage = createStage(process, stageDef);
             process.getStages().add(stage);
         }
-
         if (!process.getStages().isEmpty()) {
             process.setCurrentStage(process.getStages().get(0));
         }
-
         RecruitmentProcess savedProcess = processRepository.save(process);
         eventPublisher.publishRecruitmentCreated(savedProcess);
-
         return recruitmentProcessResponseMapper.mapToRecruitmentProcessResponse(savedProcess);
     }
 
@@ -58,11 +53,9 @@ public class RecruitmentService {
         stage.setStageOrder(stageDef.stageOrder());
         stage.setStatus(StageStatus.PENDING);
         stage.setScheduledAt(stageDef.scheduledAt());
-
         if (stageDef.stageType() == RecruitmentStageType.ASSIGNMENT) {
             stage.setAssignmentDeadline(stageDef.assignmentDeadline());
         }
-
         if (stageDef.participantUserIds() != null) {
             for (Long userId : stageDef.participantUserIds()) {
                 StageParticipant participant = new StageParticipant();
@@ -73,7 +66,6 @@ public class RecruitmentService {
                 stage.getParticipants().add(participant);
             }
         }
-
         if (stageDef.questionCards() != null) {
             for (QuestionCardDTO cardDto : stageDef.questionCards()) {
                 QuestionCard card = new QuestionCard();
@@ -103,8 +95,7 @@ public class RecruitmentService {
             stage.setStartedAt(LocalDateTime.now());
             eventPublisher.publishStageStarted(stage);
         }
-        RecruitmentStage savedStage = stageRepository.save(stage);
-        return recruitmentProcessResponseMapper.mapToStageResponse(savedStage);
+        return recruitmentProcessResponseMapper.mapToStageResponse(stageRepository.save(stage));
     }
 
     public ParticipantResponse confirmParticipation(ConfirmParticipationRequest request) {
@@ -113,7 +104,6 @@ public class RecruitmentService {
         if (participant.getStage().getStatus() != StageStatus.AWAITING_CONFIRMATIONS) {
             throw new IllegalStateException("Stage is not awaiting confirmations");
         }
-
         participant.setConfirmationStatus(
             request.confirmed() ? ParticipantConfirmationStatus.CONFIRMED
                 : ParticipantConfirmationStatus.DECLINED
@@ -122,11 +112,8 @@ public class RecruitmentService {
         participant.setConfirmationNote(request.note());
 
         StageParticipant savedParticipant = participantRepository.save(participant);
-
         checkAndStartStageIfAllConfirmed(request.stageId());
-
         eventPublisher.publishParticipationConfirmed(savedParticipant);
-
         return recruitmentProcessResponseMapper.mapToParticipantResponse(savedParticipant);
     }
 
@@ -136,7 +123,6 @@ public class RecruitmentService {
         if (unconfirmed.isEmpty()) {
             RecruitmentStage stage = stageRepository.findById(stageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Stage not found"));
-
             boolean anyDeclined = stage.getParticipants().stream()
                 .filter(StageParticipant::getIsRequired)
                 .anyMatch(p -> p.getConfirmationStatus() == ParticipantConfirmationStatus.DECLINED);
@@ -183,8 +169,7 @@ public class RecruitmentService {
             stage.setCompletedAt(LocalDateTime.now());
             eventPublisher.publishStageRejected(stage, request.reason());
         }
-        RecruitmentStage savedStage = stageRepository.save(stage);
-        return recruitmentProcessResponseMapper.mapToStageResponse(savedStage);
+        return recruitmentProcessResponseMapper.mapToStageResponse(stageRepository.save(stage));
     }
 
     public EvaluationResponse submitEvaluation(SubmitEvaluationRequest request) {
@@ -233,12 +218,10 @@ public class RecruitmentService {
         long expectedEvaluations = stage.getParticipants().stream()
             .filter(p -> p.getConfirmationStatus() == ParticipantConfirmationStatus.CONFIRMED)
             .count();
-
         long actualEvaluations = evaluationRepository.countEvaluationsByStageId(stageId);
 
         if (expectedEvaluations == actualEvaluations) {
             long rejections = evaluationRepository.countRejectionsByStageId(stageId);
-
             if (rejections > 0) {
                 stage.setStatus(StageStatus.REJECTED);
                 stage.setCompletedAt(LocalDateTime.now());
@@ -247,7 +230,6 @@ public class RecruitmentService {
                 stage.setStatus(StageStatus.COMPLETED);
                 stage.setCompletedAt(LocalDateTime.now());
                 eventPublisher.publishStageCompleted(stage);
-
                 moveToNextStage(stage.getRecruitmentProcess().getId());
             }
             stageRepository.save(stage);
