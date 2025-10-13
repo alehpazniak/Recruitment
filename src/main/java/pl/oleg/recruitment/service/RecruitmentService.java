@@ -17,6 +17,8 @@ import java.util.*;
 @Service
 @Transactional
 public class RecruitmentService {
+    
+    private static final String STAGE_NOT_FOUND = "Stage not found";
 
     private final RecruitmentProcessRepository processRepository;
     private final RecruitmentStageRepository stageRepository;
@@ -83,7 +85,7 @@ public class RecruitmentService {
 
     public RecruitmentStageResponse startStage(Long stageId) {
         RecruitmentStage stage = stageRepository.findByIdWithParticipants(stageId)
-            .orElseThrow(() -> new ResourceNotFoundException("Stage not found"));
+            .orElseThrow(() -> new ResourceNotFoundException(STAGE_NOT_FOUND));
         if (stage.getStatus() != StageStatus.PENDING) {
             throw new IllegalStateException("Stage already started or completed");
         }
@@ -122,7 +124,7 @@ public class RecruitmentService {
 
         if (unconfirmed.isEmpty()) {
             RecruitmentStage stage = stageRepository.findById(stageId)
-                .orElseThrow(() -> new ResourceNotFoundException("Stage not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(STAGE_NOT_FOUND));
             boolean anyDeclined = stage.getParticipants().stream()
                 .filter(StageParticipant::getIsRequired)
                 .anyMatch(p -> p.getConfirmationStatus() == ParticipantConfirmationStatus.DECLINED);
@@ -142,7 +144,7 @@ public class RecruitmentService {
 
     public RecruitmentStageResponse submitAssignment(Long stageId) {
         RecruitmentStage stage = stageRepository.findById(stageId)
-            .orElseThrow(() -> new ResourceNotFoundException("Stage not found"));
+            .orElseThrow(() -> new ResourceNotFoundException(STAGE_NOT_FOUND));
         if (stage.getStageType() != RecruitmentStageType.ASSIGNMENT) {
             throw new IllegalStateException("This is not an assignment stage");
         }
@@ -162,7 +164,7 @@ public class RecruitmentService {
 
     public RecruitmentStageResponse approveDeadlineOverride(ApproveDeadlineOverrideRequest request) {
         RecruitmentStage stage = stageRepository.findById(request.stageId())
-            .orElseThrow(() -> new ResourceNotFoundException("Stage not found"));
+            .orElseThrow(() -> new ResourceNotFoundException(STAGE_NOT_FOUND));
         stage.setDeadlineOverrideApproved(request.approved());
         if (!request.approved()) {
             stage.setStatus(StageStatus.REJECTED);
@@ -174,7 +176,7 @@ public class RecruitmentService {
 
     public EvaluationResponse submitEvaluation(SubmitEvaluationRequest request) {
         RecruitmentStage stage = stageRepository.findByIdWithQuestionCards(request.stageId())
-            .orElseThrow(() -> new ResourceNotFoundException("Stage not found"));
+            .orElseThrow(() -> new ResourceNotFoundException(STAGE_NOT_FOUND));
         if (stage.getStatus() != StageStatus.AWAITING_EVALUATION
             && stage.getStatus() != StageStatus.IN_PROGRESS) {
             throw new IllegalStateException("Stage is not ready for evaluation");
@@ -213,7 +215,7 @@ public class RecruitmentService {
 
     private void checkAndCompleteStageIfAllEvaluated(Long stageId) {
         RecruitmentStage stage = stageRepository.findByIdWithParticipants(stageId)
-            .orElseThrow(() -> new ResourceNotFoundException("Stage not found"));
+            .orElseThrow(() -> new ResourceNotFoundException(STAGE_NOT_FOUND));
 
         long expectedEvaluations = stage.getParticipants().stream()
             .filter(p -> p.getConfirmationStatus() == ParticipantConfirmationStatus.CONFIRMED)
@@ -269,7 +271,7 @@ public class RecruitmentService {
     @Transactional(readOnly = true)
     public RecruitmentStageResponse getStage(Long stageId) {
         RecruitmentStage stage = stageRepository.findById(stageId)
-            .orElseThrow(() -> new ResourceNotFoundException("Stage not found"));
+            .orElseThrow(() -> new ResourceNotFoundException(STAGE_NOT_FOUND));
         return recruitmentProcessResponseMapper.mapToStageResponse(stage);
     }
 
