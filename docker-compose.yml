@@ -5,21 +5,46 @@ services:
     image: 'simple:latest'
     build: .
     container_name: app
-    ports: [ "8080:8080" ]
+    ports:
+      - "8080:8080"
     depends_on:
       - db
+      - elasticsearch
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/hr_system
-    networks: [ app-services ]
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/hr_system
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    networks:
+      - app-services
+    restart: unless-stopped
 
   db:
     image: postgres:18.0-alpine
     container_name: db
-    ports: [ "5432:5432" ]
+    ports:
+      - "5432:5432"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    networks: [ app-services ]
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hr_system
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-services
+    restart: unless-stopped
+
+  elasticsearch:
+    image: elasticsearch:8.8.0
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+
+volumes:
+  pgdata:
 
 networks:
   app-services:
