@@ -6,7 +6,7 @@ import pl.oleg.recruitment.domain.StageStatus;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record RecruitmentStageResponse(
+public record  RecruitmentStageResponse(
         Long id,
         RecruitmentStageType stageType,
         Integer stageOrder,
