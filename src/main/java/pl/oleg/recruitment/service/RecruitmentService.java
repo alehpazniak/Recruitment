@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.oleg.recruitment.domain.*;
+import pl.oleg.recruitment.domain.QuestionCard;
 import pl.oleg.recruitment.dto.*;
 import pl.oleg.recruitment.event.RecruitmentEventPublisher;
 import pl.oleg.recruitment.exeption.ResourceNotFoundException;
@@ -17,7 +18,7 @@ import java.util.*;
 @Service
 @Transactional
 public class RecruitmentService {
-    
+
     private static final String STAGE_NOT_FOUND = "Stage not found";
 
     private final RecruitmentProcessRepository processRepository;
