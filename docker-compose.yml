@@ -2,8 +2,8 @@ version: '3.8'
 
 services:
   app:
-    image: 'simple:latest'
     build: .
+    image: simple:latest
     container_name: app
     ports:
       - "8080:8080"
@@ -14,12 +14,13 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/hr_system
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
     networks:
       - app-services
     restart: unless-stopped
 
   db:
-    image: postgres:18.0-alpine
+    image: postgres:16-alpine
     container_name: db
     ports:
       - "5432:5432"
@@ -34,7 +35,7 @@ services:
     restart: unless-stopped
 
   elasticsearch:
-    image: elasticsearch:8.8.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
     container_name: elasticsearch
     ports:
       - "9200:9200"
@@ -42,6 +43,9 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+    networks:
+      - app-services
+    restart: unless-stopped
 
 volumes:
   pgdata:

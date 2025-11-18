@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Document(indexName = "recruitment_stages")
-public class RecruitmentStageDocumen {
+public class RecruitmentStageDocument {
 
     @Id
     private String id;
